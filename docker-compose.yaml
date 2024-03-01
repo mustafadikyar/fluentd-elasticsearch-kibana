@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  fluentd:
+    build: ./fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc  # Burada belirli bir dosya yerine tüm dizini bağladım.
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+      - "8888:8888"  # for HTTP 
+    depends_on:
+      - elasticsearch
+      - kibana
+    networks:
+      - efk
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.1
+    container_name: elasticsearch
+    environment:
+      - "discovery.type=single-node"
+    expose:
+      - "9200"
+    ports:
+      - "9200:9200"
+    networks:
+      - efk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.13.1
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - efk
+
+networks:
+  efk:
+    driver: bridge
